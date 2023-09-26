@@ -1,6 +1,6 @@
 ---
 title: "Gov 50 Final Project"
-author: "Your Name Here"
+author: "Omer Mujawar"
 description: "My final project"
 output:
   distill::distill_article:
@@ -9,6 +9,6 @@ output:
 
 
 
-## Project thoughts
+## Project Thoughts
 
-I am interested in exploring data related to...
+I am interested in exploring data related to the recently shifting and increasingly important political landscape in Georgia. In the past two election cycles, Georgia has been at the forefront of the battle over national politics, a stark contrast from its recent solidly Republican past. I hope to explore, analyze, and visualize this changing political dynamic and the potential reasons behind this trends.
