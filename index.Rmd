@@ -18,3 +18,131 @@ I am interested in exploring data related to the recently shifting and increasin
 *Did changing immigration trends and urbanization impact the 2020 Presidential Election results?* 
 
 In this analysis, I plan on investigating the impact of immigration, and urbanization trends on the 2020 Presidential Election results (as compared to the 2016 Presidential Election results). I hypothesize that greater immigration and urbanization in districts led to a leftward and Democratic shift, which, in aggregate, helped the Democratic nominee Joe Biden win the presidency. Thus, in districts that experienced more immigration and urbanization between 2016 and 2020, I expect the Democratic nominee to have done better in 2020 than in 2016 since areas with more immigration/diversity and urbanization tend to favor Democratic candidates. On the other hand, in districts that experienced less immigration and urbanization (or even a reversal of these trends), I expect the Republican nominee to have done better in 2020 than in 2016, since areas with less immigration/urbanization and urbanization tend to favor Republican candidates. My sample consists of Congressional districts across the United States between 2016 and 2020 (prior to the changes due to the 2020 Census redistricting). My unit of analysis, thus, is an individual Congressional district. The explanatory variables of interest are whether the foreign-born population increased as well as urbanization increased between 2016 and 2020 (and how much). These variables are coded =1 if the foreign-born population share increased and if the urbanization index increased between 2016 and 2020 and =0 if they did not increase between 2016 and 2020. My outcome variable is the shift in vote percentage towards Democrats per district. For example, if a district had an outcome coded =3, then the voter percentage for the Democratic nominee increased by 3% in that district between 2016 and 2020. This variable is measured from Federal election results per district for the 2016 and 2020 presidential elections. If I observe greater Democratic vote percentages between 2016 and 2020 in districts with greater immigration and urbanization over those years, then this would provide support for my hypothesis. Otherwise, if I observe the same or negative Democratic vote percentages between 2016 and 2020 for these districts, then this would disprove my hypothesis.
+
+## Milestone 3 - Data Visualization
+
+First, we set up and clean the data we're using:
+
+```{r}
+
+library(tidyverse)
+library(usdata)
+library(RColorBrewer)
+
+# PRES ELECTION DATA
+elections <-
+  read_csv("data/presidential-election/Daily Kos Elections Congressional District Results.csv", show_col_types = FALSE)
+elections <- elections |>
+  mutate(
+    dem_diff_2020_2016 = Biden_2020 - Clinton_2016,
+    rep_diff_2020_2016 = Trump_2020 - Trump_2016
+  )
+
+# 2016 CENSUS DATA
+census_2016 <-
+  read_csv("data/census/DP02 Selected Social/ACSDP1Y2016.DP02-Data.csv", show_col_types = FALSE)
+census_2016_clean <- census_2016 |>
+  select('GEO_ID', 'NAME', 'DP02_0092E', 'DP02_0092PE') |>
+  rename(
+    "DP02_0092E_2016" = "DP02_0092E",
+    "DP02_0092PE_2016" = "DP02_0092PE",
+    "NAME_2016" = "NAME"
+  ) |>
+  mutate(GEO_ID_adj = substring(GEO_ID, 8)) |>
+  filter(GEO_ID != "Geography",
+         GEO_ID_adj != "US1198",
+         GEO_ID_adj != "US7298") |>
+  select(-GEO_ID) |>
+  rowwise() |>
+  mutate(
+    state = strsplit(NAME_2016, split=", ")[[1]][2],
+    district = if_else(substring(GEO_ID_adj, 5) == "00", "AL", substring(GEO_ID_adj, 5))
+  )
+
+# 2020 CENSUS DATA
+census_2020 <-
+  read_csv("data/census/DP02 Selected Social/ACSDP1Y2021.DP02-Data.csv", show_col_types = FALSE)
+census_2020_clean <- census_2020 |>
+  select('GEO_ID', 'NAME', 'DP02_0092E', 'DP02_0092PE') |>
+  rename(
+    "DP02_0092E_2020" = "DP02_0092E",
+    "DP02_0092PE_2020" = "DP02_0092PE",
+    "NAME_2020" = "NAME"
+  ) |>
+  slice(1:437) |>
+  mutate(GEO_ID_adj = substring(GEO_ID, 8)) |>
+  filter(GEO_ID != "Geography",
+         GEO_ID_adj != "US1198",
+         GEO_ID_adj != "US7298") |>
+  select(-GEO_ID) |>
+  rowwise() |>
+  mutate(
+    state = strsplit(NAME_2020, split=", ")[[1]][2],
+    district = if_else(substring(GEO_ID_adj, 5) == "00", "AL", substring(GEO_ID_adj, 5))
+  )
+
+head(elections) |>
+  knitr::kable()
+
+head(census_2016_clean) |>
+  knitr::kable()
+
+head(census_2020_clean) |>
+  knitr::kable()
+
+```
+
+Next, we must join the datasets together, starting with the census data:
+
+```{r}
+census_2016_2020 <- census_2016_clean |> 
+  left_join(census_2020_clean, by = join_by(GEO_ID_adj, state, district)) |>
+  rowwise() |>
+  mutate(
+    state_abb = state2abbr(state),
+    District = paste(state_abb, district, sep = "-")
+  ) |>
+  select("District", "state", "state_abb", "state", "district", "DP02_0092E_2016", "DP02_0092PE_2016", "DP02_0092E_2020", "DP02_0092PE_2020") |>
+  rename("district_num" = "district") |>
+  mutate(
+    DP02_0092E_diff = as.double(DP02_0092E_2020) - as.double(DP02_0092E_2016), 
+    DP02_0092PE_diff = as.double(DP02_0092PE_2020) - as.double(DP02_0092PE_2016),
+    for_pop_increase = if_else(DP02_0092E_diff > 0, 1, 0),
+    for_pop_perc_increase = if_else(DP02_0092PE_diff > 0, 1, 0)
+  )
+
+head(census_2016_2020) |>
+  knitr::kable()
+  
+```
+
+We can join this census data with the election data now and create our visualization: 
+
+```{r}
+census_2016_2020 |>
+  left_join(elections) |>
+  ggplot(aes(x = as.double(DP02_0092PE_2020), y = Biden_2020)) +
+  geom_point(aes(color = DP02_0092PE_diff)) + 
+  labs(
+    title = "Foreign Born Population vs. Biden Vote Share in Congressional Districts", x = "2020 Foreign Born Population Share (%)", y = "2020 Vote Share for Biden (%)", color = "% Foreign\nBorn\nPopulation\nIncrease \n(2016-20)", caption = "Sources: American Community Survey, Daily Kos") + 
+  geom_smooth(method = "lm") +
+  scale_color_distiller(palette = "RdBu", aesthetics = "color")
+```
+We can start analyzing the effect of an increase in foreign born population share:
+
+```{r}
+ate_for_pop_perc <- census_2016_2020 |>
+  left_join(elections) |>
+  mutate(Treatment = if_else(for_pop_perc_increase == 1, "Treated", "Control")) |>
+  group_by(Treatment) |>
+  summarize(dem_diff_mean = mean(dem_diff_2020_2016)) |>
+  pivot_wider(
+    names_from = Treatment,
+    values_from = dem_diff_mean
+  ) |>
+  mutate(ATE = `Treated` - `Control`)
+
+ate_for_pop_perc |>
+  knitr::kable()
+```
+
