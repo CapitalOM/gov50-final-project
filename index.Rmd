@@ -24,14 +24,16 @@ In this analysis, I plan on investigating the impact of immigration, and urbaniz
 First, we set up and clean the data we're using:
 
 ```{r}
-
 library(tidyverse)
 library(usdata)
 library(RColorBrewer)
 
 # PRES ELECTION DATA
 elections <-
-  read_csv("data/presidential-election/Daily Kos Elections Congressional District Results.csv", show_col_types = FALSE)
+  read_csv(
+    "data/presidential-election/Daily Kos Elections Congressional District Results.csv",
+    show_col_types = FALSE
+  )
 elections <- elections |>
   mutate(
     dem_diff_2020_2016 = Biden_2020 - Clinton_2016,
@@ -40,7 +42,8 @@ elections <- elections |>
 
 # 2016 CENSUS DATA
 census_2016 <-
-  read_csv("data/census/DP02 Selected Social/ACSDP1Y2016.DP02-Data.csv", show_col_types = FALSE)
+  read_csv("data/census/DP02 Selected Social/ACSDP1Y2016.DP02-Data.csv",
+           show_col_types = FALSE)
 census_2016_clean <- census_2016 |>
   select('GEO_ID', 'NAME', 'DP02_0092E', 'DP02_0092PE') |>
   rename(
@@ -55,13 +58,14 @@ census_2016_clean <- census_2016 |>
   select(-GEO_ID) |>
   rowwise() |>
   mutate(
-    state = strsplit(NAME_2016, split=", ")[[1]][2],
+    state = strsplit(NAME_2016, split = ", ")[[1]][2],
     district = if_else(substring(GEO_ID_adj, 5) == "00", "AL", substring(GEO_ID_adj, 5))
   )
 
 # 2020 CENSUS DATA
 census_2020 <-
-  read_csv("data/census/DP02 Selected Social/ACSDP1Y2021.DP02-Data.csv", show_col_types = FALSE)
+  read_csv("data/census/DP02 Selected Social/ACSDP1Y2021.DP02-Data.csv",
+           show_col_types = FALSE)
 census_2020_clean <- census_2020 |>
   select('GEO_ID', 'NAME', 'DP02_0092E', 'DP02_0092PE') |>
   rename(
@@ -77,7 +81,7 @@ census_2020_clean <- census_2020 |>
   select(-GEO_ID) |>
   rowwise() |>
   mutate(
-    state = strsplit(NAME_2020, split=", ")[[1]][2],
+    state = strsplit(NAME_2020, split = ", ")[[1]][2],
     district = if_else(substring(GEO_ID_adj, 5) == "00", "AL", substring(GEO_ID_adj, 5))
   )
 
@@ -89,23 +93,30 @@ head(census_2016_clean) |>
 
 head(census_2020_clean) |>
   knitr::kable()
-
 ```
 
 Next, we must join the datasets together, starting with the census data:
 
 ```{r}
-census_2016_2020 <- census_2016_clean |> 
+census_2016_2020 <- census_2016_clean |>
   left_join(census_2020_clean, by = join_by(GEO_ID_adj, state, district)) |>
   rowwise() |>
-  mutate(
-    state_abb = state2abbr(state),
-    District = paste(state_abb, district, sep = "-")
+  mutate(state_abb = state2abbr(state),
+         District = paste(state_abb, district, sep = "-")) |>
+  select(
+    "District",
+    "state",
+    "state_abb",
+    "state",
+    "district",
+    "DP02_0092E_2016",
+    "DP02_0092PE_2016",
+    "DP02_0092E_2020",
+    "DP02_0092PE_2020"
   ) |>
-  select("District", "state", "state_abb", "state", "district", "DP02_0092E_2016", "DP02_0092PE_2016", "DP02_0092E_2020", "DP02_0092PE_2020") |>
   rename("district_num" = "district") |>
   mutate(
-    DP02_0092E_diff = as.double(DP02_0092E_2020) - as.double(DP02_0092E_2016), 
+    DP02_0092E_diff = as.double(DP02_0092E_2020) - as.double(DP02_0092E_2016),
     DP02_0092PE_diff = as.double(DP02_0092PE_2020) - as.double(DP02_0092PE_2016),
     for_pop_increase = if_else(DP02_0092E_diff > 0, 1, 0),
     for_pop_perc_increase = if_else(DP02_0092PE_diff > 0, 1, 0)
@@ -113,7 +124,6 @@ census_2016_2020 <- census_2016_clean |>
 
 head(census_2016_2020) |>
   knitr::kable()
-  
 ```
 
 We can join this census data with the election data now and create our visualization: 
@@ -122,9 +132,14 @@ We can join this census data with the election data now and create our visualiza
 census_2016_2020 |>
   left_join(elections) |>
   ggplot(aes(x = as.double(DP02_0092PE_2020), y = Biden_2020)) +
-  geom_point(aes(color = DP02_0092PE_diff)) + 
+  geom_point(aes(color = DP02_0092PE_diff)) +
   labs(
-    title = "Foreign Born Population vs. Biden Vote Share in Congressional Districts", x = "2020 Foreign Born Population Share (%)", y = "2020 Vote Share for Biden (%)", color = "% Foreign\nBorn\nPopulation\nIncrease \n(2016-20)", caption = "Sources: American Community Survey, Daily Kos") + 
+    title = "Foreign Born Population vs. Biden Vote Share in Congressional Districts",
+    x = "2020 Foreign Born Population Share (%)",
+    y = "2020 Vote Share for Biden (%)",
+    color = "% Foreign\nBorn\nPopulation\nIncrease \n(2016-20)",
+    caption = "Sources: American Community Survey, Daily Kos"
+  ) +
   geom_smooth(method = "lm") +
   scale_color_distiller(palette = "RdBu", aesthetics = "color")
 ```
@@ -136,10 +151,8 @@ ate_for_pop_perc <- census_2016_2020 |>
   mutate(Treatment = if_else(for_pop_perc_increase == 1, "Treated", "Control")) |>
   group_by(Treatment) |>
   summarize(dem_diff_mean = mean(dem_diff_2020_2016)) |>
-  pivot_wider(
-    names_from = Treatment,
-    values_from = dem_diff_mean
-  ) |>
+  pivot_wider(names_from = Treatment,
+              values_from = dem_diff_mean) |>
   mutate(ATE = `Treated` - `Control`)
 
 ate_for_pop_perc |>

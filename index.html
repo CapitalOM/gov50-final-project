@@ -1532,7 +1532,10 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <span></span>
 <span><span class='co'># PRES ELECTION DATA</span></span>
 <span><span class='va'>elections</span> <span class='op'>&lt;-</span></span>
-<span>  <span class='fu'><a href='https://readr.tidyverse.org/reference/read_delim.html'>read_csv</a></span><span class='op'>(</span><span class='st'>"data/presidential-election/Daily Kos Elections Congressional District Results.csv"</span>, show_col_types <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></span>
+<span>  <span class='fu'><a href='https://readr.tidyverse.org/reference/read_delim.html'>read_csv</a></span><span class='op'>(</span></span>
+<span>    <span class='st'>"data/presidential-election/Daily Kos Elections Congressional District Results.csv"</span>,</span>
+<span>    show_col_types <span class='op'>=</span> <span class='cn'>FALSE</span></span>
+<span>  <span class='op'>)</span></span>
 <span><span class='va'>elections</span> <span class='op'>&lt;-</span> <span class='va'>elections</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span></span>
 <span>    dem_diff_2020_2016 <span class='op'>=</span> <span class='va'>Biden_2020</span> <span class='op'>-</span> <span class='va'>Clinton_2016</span>,</span>
@@ -1541,7 +1544,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <span></span>
 <span><span class='co'># 2016 CENSUS DATA</span></span>
 <span><span class='va'>census_2016</span> <span class='op'>&lt;-</span></span>
-<span>  <span class='fu'><a href='https://readr.tidyverse.org/reference/read_delim.html'>read_csv</a></span><span class='op'>(</span><span class='st'>"data/census/DP02 Selected Social/ACSDP1Y2016.DP02-Data.csv"</span>, show_col_types <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></span>
+<span>  <span class='fu'><a href='https://readr.tidyverse.org/reference/read_delim.html'>read_csv</a></span><span class='op'>(</span><span class='st'>"data/census/DP02 Selected Social/ACSDP1Y2016.DP02-Data.csv"</span>,</span>
+<span>           show_col_types <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></span>
 <span><span class='va'>census_2016_clean</span> <span class='op'>&lt;-</span> <span class='va'>census_2016</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='st'>'GEO_ID'</span>, <span class='st'>'NAME'</span>, <span class='st'>'DP02_0092E'</span>, <span class='st'>'DP02_0092PE'</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/rename.html'>rename</a></span><span class='op'>(</span></span>
@@ -1556,13 +1560,14 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='op'>-</span><span class='va'>GEO_ID</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/rowwise.html'>rowwise</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span></span>
-<span>    state <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/strsplit.html'>strsplit</a></span><span class='op'>(</span><span class='va'>NAME_2016</span>, split<span class='op'>=</span><span class='st'>", "</span><span class='op'>)</span><span class='op'>[[</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>]</span><span class='op'>[</span><span class='fl'>2</span><span class='op'>]</span>,</span>
+<span>    state <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/strsplit.html'>strsplit</a></span><span class='op'>(</span><span class='va'>NAME_2016</span>, split <span class='op'>=</span> <span class='st'>", "</span><span class='op'>)</span><span class='op'>[[</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>]</span><span class='op'>[</span><span class='fl'>2</span><span class='op'>]</span>,</span>
 <span>    district <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/if_else.html'>if_else</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/substr.html'>substring</a></span><span class='op'>(</span><span class='va'>GEO_ID_adj</span>, <span class='fl'>5</span><span class='op'>)</span> <span class='op'>==</span> <span class='st'>"00"</span>, <span class='st'>"AL"</span>, <span class='fu'><a href='https://rdrr.io/r/base/substr.html'>substring</a></span><span class='op'>(</span><span class='va'>GEO_ID_adj</span>, <span class='fl'>5</span><span class='op'>)</span><span class='op'>)</span></span>
 <span>  <span class='op'>)</span></span>
 <span></span>
 <span><span class='co'># 2020 CENSUS DATA</span></span>
 <span><span class='va'>census_2020</span> <span class='op'>&lt;-</span></span>
-<span>  <span class='fu'><a href='https://readr.tidyverse.org/reference/read_delim.html'>read_csv</a></span><span class='op'>(</span><span class='st'>"data/census/DP02 Selected Social/ACSDP1Y2021.DP02-Data.csv"</span>, show_col_types <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></span>
+<span>  <span class='fu'><a href='https://readr.tidyverse.org/reference/read_delim.html'>read_csv</a></span><span class='op'>(</span><span class='st'>"data/census/DP02 Selected Social/ACSDP1Y2021.DP02-Data.csv"</span>,</span>
+<span>           show_col_types <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></span>
 <span><span class='va'>census_2020_clean</span> <span class='op'>&lt;-</span> <span class='va'>census_2020</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='st'>'GEO_ID'</span>, <span class='st'>'NAME'</span>, <span class='st'>'DP02_0092E'</span>, <span class='st'>'DP02_0092PE'</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/rename.html'>rename</a></span><span class='op'>(</span></span>
@@ -1578,7 +1583,7 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='op'>-</span><span class='va'>GEO_ID</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/rowwise.html'>rowwise</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span></span>
-<span>    state <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/strsplit.html'>strsplit</a></span><span class='op'>(</span><span class='va'>NAME_2020</span>, split<span class='op'>=</span><span class='st'>", "</span><span class='op'>)</span><span class='op'>[[</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>]</span><span class='op'>[</span><span class='fl'>2</span><span class='op'>]</span>,</span>
+<span>    state <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/strsplit.html'>strsplit</a></span><span class='op'>(</span><span class='va'>NAME_2020</span>, split <span class='op'>=</span> <span class='st'>", "</span><span class='op'>)</span><span class='op'>[[</span><span class='fl'>1</span><span class='op'>]</span><span class='op'>]</span><span class='op'>[</span><span class='fl'>2</span><span class='op'>]</span>,</span>
 <span>    district <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/if_else.html'>if_else</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/substr.html'>substring</a></span><span class='op'>(</span><span class='va'>GEO_ID_adj</span>, <span class='fl'>5</span><span class='op'>)</span> <span class='op'>==</span> <span class='st'>"00"</span>, <span class='st'>"AL"</span>, <span class='fu'><a href='https://rdrr.io/r/base/substr.html'>substring</a></span><span class='op'>(</span><span class='va'>GEO_ID_adj</span>, <span class='fl'>5</span><span class='op'>)</span><span class='op'>)</span></span>
 <span>  <span class='op'>)</span></span>
 <span></span>
@@ -1863,17 +1868,25 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <p>Next, we must join the datasets together, starting with the census data:</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="sourceCode">
-<pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>census_2016_2020</span> <span class='op'>&lt;-</span> <span class='va'>census_2016_clean</span> <span class='op'>|&gt;</span> </span>
+<pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>census_2016_2020</span> <span class='op'>&lt;-</span> <span class='va'>census_2016_clean</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>census_2020_clean</span>, by <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/join_by.html'>join_by</a></span><span class='op'>(</span><span class='va'>GEO_ID_adj</span>, <span class='va'>state</span>, <span class='va'>district</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/rowwise.html'>rowwise</a></span><span class='op'>(</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
-<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span></span>
-<span>    state_abb <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/pkg/usdata/man/state2abbr.html'>state2abbr</a></span><span class='op'>(</span><span class='va'>state</span><span class='op'>)</span>,</span>
-<span>    District <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste</a></span><span class='op'>(</span><span class='va'>state_abb</span>, <span class='va'>district</span>, sep <span class='op'>=</span> <span class='st'>"-"</span><span class='op'>)</span></span>
+<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>state_abb <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/pkg/usdata/man/state2abbr.html'>state2abbr</a></span><span class='op'>(</span><span class='va'>state</span><span class='op'>)</span>,</span>
+<span>         District <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste</a></span><span class='op'>(</span><span class='va'>state_abb</span>, <span class='va'>district</span>, sep <span class='op'>=</span> <span class='st'>"-"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
+<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span></span>
+<span>    <span class='st'>"District"</span>,</span>
+<span>    <span class='st'>"state"</span>,</span>
+<span>    <span class='st'>"state_abb"</span>,</span>
+<span>    <span class='st'>"state"</span>,</span>
+<span>    <span class='st'>"district"</span>,</span>
+<span>    <span class='st'>"DP02_0092E_2016"</span>,</span>
+<span>    <span class='st'>"DP02_0092PE_2016"</span>,</span>
+<span>    <span class='st'>"DP02_0092E_2020"</span>,</span>
+<span>    <span class='st'>"DP02_0092PE_2020"</span></span>
 <span>  <span class='op'>)</span> <span class='op'>|&gt;</span></span>
-<span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/select.html'>select</a></span><span class='op'>(</span><span class='st'>"District"</span>, <span class='st'>"state"</span>, <span class='st'>"state_abb"</span>, <span class='st'>"state"</span>, <span class='st'>"district"</span>, <span class='st'>"DP02_0092E_2016"</span>, <span class='st'>"DP02_0092PE_2016"</span>, <span class='st'>"DP02_0092E_2020"</span>, <span class='st'>"DP02_0092PE_2020"</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/rename.html'>rename</a></span><span class='op'>(</span><span class='st'>"district_num"</span> <span class='op'>=</span> <span class='st'>"district"</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span></span>
-<span>    DP02_0092E_diff <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/double.html'>as.double</a></span><span class='op'>(</span><span class='va'>DP02_0092E_2020</span><span class='op'>)</span> <span class='op'>-</span> <span class='fu'><a href='https://rdrr.io/r/base/double.html'>as.double</a></span><span class='op'>(</span><span class='va'>DP02_0092E_2016</span><span class='op'>)</span>, </span>
+<span>    DP02_0092E_diff <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/double.html'>as.double</a></span><span class='op'>(</span><span class='va'>DP02_0092E_2020</span><span class='op'>)</span> <span class='op'>-</span> <span class='fu'><a href='https://rdrr.io/r/base/double.html'>as.double</a></span><span class='op'>(</span><span class='va'>DP02_0092E_2016</span><span class='op'>)</span>,</span>
 <span>    DP02_0092PE_diff <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/double.html'>as.double</a></span><span class='op'>(</span><span class='va'>DP02_0092PE_2020</span><span class='op'>)</span> <span class='op'>-</span> <span class='fu'><a href='https://rdrr.io/r/base/double.html'>as.double</a></span><span class='op'>(</span><span class='va'>DP02_0092PE_2016</span><span class='op'>)</span>,</span>
 <span>    for_pop_increase <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/if_else.html'>if_else</a></span><span class='op'>(</span><span class='va'>DP02_0092E_diff</span> <span class='op'>&gt;</span> <span class='fl'>0</span>, <span class='fl'>1</span>, <span class='fl'>0</span><span class='op'>)</span>,</span>
 <span>    for_pop_perc_increase <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/if_else.html'>if_else</a></span><span class='op'>(</span><span class='va'>DP02_0092PE_diff</span> <span class='op'>&gt;</span> <span class='fl'>0</span>, <span class='fl'>1</span>, <span class='fl'>0</span><span class='op'>)</span></span>
@@ -2007,9 +2020,14 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <pre class="sourceCode r"><code class="sourceCode r"><span><span class='va'>census_2016_2020</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate-joins.html'>left_join</a></span><span class='op'>(</span><span class='va'>elections</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>x <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/double.html'>as.double</a></span><span class='op'>(</span><span class='va'>DP02_0092PE_2020</span><span class='op'>)</span>, y <span class='op'>=</span> <span class='va'>Biden_2020</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span></span>
-<span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_point.html'>geom_point</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>color <span class='op'>=</span> <span class='va'>DP02_0092PE_diff</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span> </span>
+<span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_point.html'>geom_point</a></span><span class='op'>(</span><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span>color <span class='op'>=</span> <span class='va'>DP02_0092PE_diff</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span></span>
 <span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/labs.html'>labs</a></span><span class='op'>(</span></span>
-<span>    title <span class='op'>=</span> <span class='st'>"Foreign Born Population vs. Biden Vote Share in Congressional Districts"</span>, x <span class='op'>=</span> <span class='st'>"2020 Foreign Born Population Share (%)"</span>, y <span class='op'>=</span> <span class='st'>"2020 Vote Share for Biden (%)"</span>, color <span class='op'>=</span> <span class='st'>"% Foreign\nBorn\nPopulation\nIncrease \n(2016-20)"</span>, caption <span class='op'>=</span> <span class='st'>"Sources: American Community Survey, Daily Kos"</span><span class='op'>)</span> <span class='op'>+</span> </span>
+<span>    title <span class='op'>=</span> <span class='st'>"Foreign Born Population vs. Biden Vote Share in Congressional Districts"</span>,</span>
+<span>    x <span class='op'>=</span> <span class='st'>"2020 Foreign Born Population Share (%)"</span>,</span>
+<span>    y <span class='op'>=</span> <span class='st'>"2020 Vote Share for Biden (%)"</span>,</span>
+<span>    color <span class='op'>=</span> <span class='st'>"% Foreign\nBorn\nPopulation\nIncrease \n(2016-20)"</span>,</span>
+<span>    caption <span class='op'>=</span> <span class='st'>"Sources: American Community Survey, Daily Kos"</span></span>
+<span>  <span class='op'>)</span> <span class='op'>+</span></span>
 <span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_smooth.html'>geom_smooth</a></span><span class='op'>(</span>method <span class='op'>=</span> <span class='st'>"lm"</span><span class='op'>)</span> <span class='op'>+</span></span>
 <span>  <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/scale_brewer.html'>scale_color_distiller</a></span><span class='op'>(</span>palette <span class='op'>=</span> <span class='st'>"RdBu"</span>, aesthetics <span class='op'>=</span> <span class='st'>"color"</span><span class='op'>)</span></span></code></pre>
 </div>
@@ -2023,10 +2041,8 @@ code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>Treatment <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/if_else.html'>if_else</a></span><span class='op'>(</span><span class='va'>for_pop_perc_increase</span> <span class='op'>==</span> <span class='fl'>1</span>, <span class='st'>"Treated"</span>, <span class='st'>"Control"</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>Treatment</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/summarise.html'>summarize</a></span><span class='op'>(</span>dem_diff_mean <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span><span class='op'>(</span><span class='va'>dem_diff_2020_2016</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
-<span>  <span class='fu'><a href='https://tidyr.tidyverse.org/reference/pivot_wider.html'>pivot_wider</a></span><span class='op'>(</span></span>
-<span>    names_from <span class='op'>=</span> <span class='va'>Treatment</span>,</span>
-<span>    values_from <span class='op'>=</span> <span class='va'>dem_diff_mean</span></span>
-<span>  <span class='op'>)</span> <span class='op'>|&gt;</span></span>
+<span>  <span class='fu'><a href='https://tidyr.tidyverse.org/reference/pivot_wider.html'>pivot_wider</a></span><span class='op'>(</span>names_from <span class='op'>=</span> <span class='va'>Treatment</span>,</span>
+<span>              values_from <span class='op'>=</span> <span class='va'>dem_diff_mean</span><span class='op'>)</span> <span class='op'>|&gt;</span></span>
 <span>  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>ATE <span class='op'>=</span> <span class='va'>`Treated`</span> <span class='op'>-</span> <span class='va'>`Control`</span><span class='op'>)</span></span>
 <span></span>
 <span><span class='va'>ate_for_pop_perc</span> <span class='op'>|&gt;</span></span>
