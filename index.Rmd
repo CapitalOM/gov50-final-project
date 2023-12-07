@@ -1,32 +1,56 @@
 ---
-title: "Gov 50 Final Project"
-author: "Omer Mujawar"
-description: "My final project"
+title: "One Fish, Two Fish, Red Fish, Blue Shift"
+author: 
+  - name: "Omer Mujawar"
+    url: https://github.com/capitalom
+description: "A data-driven analysis on the results and demographic causes behind the 2020 Presidential Election"
+date: "December 13, 2023"
 output:
   distill::distill_article:
     self_contained: false
+    toc: true
 ---
 
+```{r Setup, include = FALSE}
+options(width = 100)
+knitr::opts_chunk$set(error = TRUE)
+library(tidyverse)
+library(infer)
+library(usdata)
+library(kableExtra)
+library(RColorBrewer)
+library(USAboundaries)
+library(sf)
+library(modelsummary)
+```
 
+## Introduction
 
-## Milestone 1 - Project Thoughts
+In the past two election cycles, my home state of Georgia has been at the forefront of the battle over national politics, a stark contrast from its recent solidly Republican past. I am interested in exploring data related to the recently shifting and increasingly important political landscape in Georgia and nationally. I hope to explore, analyze, and visualize this changing political dynamic and the potential reasons behind this trends. To guide my investigation, I chose the following as my principal research question:
 
-I am interested in exploring data related to the recently shifting and increasingly important political landscape in Georgia. In the past two election cycles, Georgia has been at the forefront of the battle over national politics, a stark contrast from its recent solidly Republican past. I hope to explore, analyze, and visualize this changing political dynamic and the potential reasons behind this trends.
+*Did changing immigration trends impact the 2020 Presidential Election results?*
 
-## Milestone 2 - Data and Proposal
+In this analysis, I plan on investigating the impact of immigration trends on the 2020 Presidential Election results (as compared to the 2016 Presidential Election results). I hypothesize that greater immigration in districts led to a leftward and Democratic shift, which, in aggregate, helped the Democratic nominee Joe Biden win the presidency. Thus, in districts that experienced more immigration between 2016 and 2020, I expect the Democratic nominee to have done better in 2020 than in 2016 since areas with more immigration/diversity tend to favor Democratic candidates. On the other hand, in districts that experienced less immigration (or even a reversal of these trends), I expect the Republican nominee to have done better in 2020 than in 2016, since areas with less immigration tend to favor Republican candidates.
 
-*Did changing immigration trends and urbanization impact the 2020 Presidential Election results?* 
+### Why is this analysis important?
 
-In this analysis, I plan on investigating the impact of immigration, and urbanization trends on the 2020 Presidential Election results (as compared to the 2016 Presidential Election results). I hypothesize that greater immigration and urbanization in districts led to a leftward and Democratic shift, which, in aggregate, helped the Democratic nominee Joe Biden win the presidency. Thus, in districts that experienced more immigration and urbanization between 2016 and 2020, I expect the Democratic nominee to have done better in 2020 than in 2016 since areas with more immigration/diversity and urbanization tend to favor Democratic candidates. On the other hand, in districts that experienced less immigration and urbanization (or even a reversal of these trends), I expect the Republican nominee to have done better in 2020 than in 2016, since areas with less immigration/urbanization and urbanization tend to favor Republican candidates. My sample consists of Congressional districts across the United States between 2016 and 2020 (prior to the changes due to the 2020 Census redistricting). My unit of analysis, thus, is an individual Congressional district. The explanatory variables of interest are whether the foreign-born population increased as well as urbanization increased between 2016 and 2020 (and how much). These variables are coded =1 if the foreign-born population share increased and if the urbanization index increased between 2016 and 2020 and =0 if they did not increase between 2016 and 2020. My outcome variable is the shift in vote percentage towards Democrats per district. For example, if a district had an outcome coded =3, then the voter percentage for the Democratic nominee increased by 3% in that district between 2016 and 2020. This variable is measured from Federal election results per district for the 2016 and 2020 presidential elections. If I observe greater Democratic vote percentages between 2016 and 2020 in districts with greater immigration and urbanization over those years, then this would provide support for my hypothesis. Otherwise, if I observe the same or negative Democratic vote percentages between 2016 and 2020 for these districts, then this would disprove my hypothesis.
+The 2020 election represents a major point in American political history, both in terms of its electoral results but also in terms of the actual demographic and population shift that may have driven it. Understanding the potential factors behind the results may provide greater insights into the current political zeitgeist as well as the demographic characteristics that were --- and will likely continue to be --- important electorally. Through this analysis, I hope to shed light on the changing political state of America but also the changing social fabric of this nation.
 
-## Milestone 3 - Data Visualization
+## Analyzing the Data
+
+### Sourcing the Data
+
+The chosen data I used came from two main sources: the United States Census' [American Community Survey](https://www.census.gov/programs-surveys/acs) (for population and immigration trends at the congressional district level) and [Daily Kos' congressional district election results](https://docs.google.com/spreadsheets/d/1XbUXnI9OyfAuhP5P3vWtMuGc5UJlrhXbzZo3AwMuHtk/edit#gid=0) (for detailed percentage results in the past few presidential elections). The ACS data came from Census survey data that used expert coding to codify the thousands of variables measured. Finally, the Daily Kos data came from reported/survey data from electoral agencies.
+
+From these data sources, the sample relevant to my analysis consists of Congressional districts across the United States between 2016 and 2020 (prior to the changes due to the 2020 Census redistricting). My unit of analysis, thus, is an individual Congressional district. The explanatory variable of interest is whether the foreign-born population share increased between 2016 and 2020. This variable (sourced from the ACS survey and coded data described above) is coded =1 if the foreign-born population share increased between 2016 and 2020 and =0 if it did not increase between 2016 and 2020. My outcome variable (sourced from the Daily Kos data described above) is the shift in vote percentage towards Democrats per district. For example, if a district had an outcome coded =3, then the voter percentage for the Democratic nominee increased by 3% in that district between 2016 and 2020. This variable is measured from Federal election results per district for the 2016 and 2020 presidential elections. If I observe greater Democratic vote percentages between 2016 and 2020 in districts with greater immigration over those years, then this would provide support for my hypothesis. Otherwise, if I observe the same or negative Democratic vote percentages between 2016 and 2020 for these districts, then this would disprove my hypothesis.
+
+Via this data setup, we can see that our research design for our analysis is **differences-in-differences**, since we analyze the *change* in political election trends in both our treated and control groups after the introduction of greater immigration to our treated groups.
+
+### Data Pre-processing
 
 First, we set up and clean the data we're using:
 
-```{r}
-library(tidyverse)
-library(usdata)
-library(RColorBrewer)
+```{r Loading the Data Sources, messages=FALSE}
 
 # PRES ELECTION DATA
 elections <-
@@ -84,20 +108,11 @@ census_2020_clean <- census_2020 |>
     state = strsplit(NAME_2020, split = ", ")[[1]][2],
     district = if_else(substring(GEO_ID_adj, 5) == "00", "AL", substring(GEO_ID_adj, 5))
   )
-
-head(elections) |>
-  knitr::kable()
-
-head(census_2016_clean) |>
-  knitr::kable()
-
-head(census_2020_clean) |>
-  knitr::kable()
 ```
 
-Next, we must join the datasets together, starting with the census data:
+Next, we must join the data sets together, starting with the census data:
 
-```{r}
+```{r Joining Census Data Across Both Years}
 census_2016_2020 <- census_2016_clean |>
   left_join(census_2020_clean, by = join_by(GEO_ID_adj, state, district)) |>
   rowwise() |>
@@ -121,41 +136,277 @@ census_2016_2020 <- census_2016_clean |>
     for_pop_increase = if_else(DP02_0092E_diff > 0, 1, 0),
     for_pop_perc_increase = if_else(DP02_0092PE_diff > 0, 1, 0)
   )
-
-head(census_2016_2020) |>
-  knitr::kable()
 ```
 
-We can join this census data with the election data now and create our visualization: 
+### Looking at the Data Sources
 
-```{r}
+We can take a look at the election results data set we will be using below (specifically, just the top `head` of it). The main variable of interest is the dependent variable `dem_diff_2020_2016`, which describes the voter share percentage shift for the Democratic presidential candidate per each congressional district (i.e., a value of 3 means that the Democratic candidate got 3% higher voter share in 2020 compared to 2016 in this district).
+
+```{r Visualizing the Data Sources - Election Data, echo=FALSE}
+head(elections) |> 
+  select("District", "Incumbent", "Party", "Biden_2020", "Clinton_2016", "dem_diff_2020_2016") |>
+  knitr::kable(col.names = c("District", "Incumbent", "Party", "Biden % (2020)", "Clinton % (2016)", "Democratic Vote % Difference (2016-2020)")) |> 
+  scroll_box(width = "600px", height = "300px")
+```
+
+We can also examine the combined and processed Census data below (specifically, just the top `head` of it). The main variable of interest is the independent variable `Foreign Population % Increased?`, which is a Boolean variable representing if the foreign population percentage increased or not in a congressional district between 2016 and 2020 (i.e., a value of 1 means the foreign population percentage increased and 0 means it decreased).
+
+```{r Visualizing the Data Sources - Combined Census Data, echo=FALSE}
+head(census_2016_2020) |>
+  select(`District`, `state`, `DP02_0092PE_2016`, `DP02_0092PE_2020`, `for_pop_perc_increase`) |>
+  knitr::kable(col.names = c("District", "State", "Foreign Population % (2016)", "Foreign Population % (2020)", "Foreign Population % Increased?")) |>
+  scroll_box(width = "600px")
+```
+
+### Visualizing the Outcome of Interest
+
+The main variable and outcome of interest studied in this election is the vote shift towards/away the Democratic presidential candidate between 2016 and 2020 for each congressional district (i.e., how much more or less did the Democratic candidate get as a percentage of the district's vote share in 2020 compared to 2016). We can visualize this data to get a histogram of the Democratic vote share shift (with the mean of the data highlighted):
+
+```{r Visualizing the Outcome of Interest - Histogram}
+
+elections |>
+  ggplot(aes(x = dem_diff_2020_2016)) + 
+  geom_histogram(fill = "steelblue4") + 
+  geom_vline(mapping=aes(xintercept= mean(dem_diff_2020_2016)), color = "darkblue") + 
+  labs(
+    title = "Distribution of Democratic Candidate Vote Share Percentage Shifts across Congressional Districts", 
+    x = "% Democratic Candidate Vote Share Shift (2016-2020)", 
+    y = "Frequency"
+  ) + 
+  theme(plot.title = element_text(size = "10"))
+```
+
+Additionally, we can visualize the percentage shift in Democratic vote share across congressional districts in the United States in a map format (McCrain, 2020):
+
+```{r Visualizing the Outcome of Interest - Continental Map}
+
+district_map <- us_congressional(resolution = "high") |>
+  filter(
+    state_name %in% state.name & !(state_name %in% c("Hawaii", "Alaska"))
+  )
+
+elections_simple <- elections |>
+  select("District", "dem_diff_2020_2016")
+
+district_map_data <- district_map |> 
+  ungroup() |>
+  mutate(district = str_replace(cd116fp, "00", "AL")) |>
+  mutate(District = paste(state_abbr, district, sep = "-")) |>
+  right_join(elections, by = "District")
+
+ggplot() +
+  geom_sf(data = district_map_data, aes(fill = `dem_diff_2020_2016`), color="black") +
+  scale_fill_gradient2(low = "red", mid = "white", high = "steelblue4", midpoint = 0) +
+  theme_void() +
+  labs(
+    title = "Percentage Shift in Democratic Candidate\nVote Share per Congressional District",
+    fill = "% Dem Candidate\nVote Share Shift\n(2016-2020)",
+    caption = "Source: Daily Kos"
+  ) + 
+  theme(plot.title = element_text(size = 16, hjust = 0.2))
+```
+
+Notice how most of the states tended to increase in Democratic candidate voter share, which makes sense since the elections in 2016 and 2020 swung from a Republican victory to a Democratic one. Notably, some districts in the South actually decreased in voter share by a relatively sizable amount.
+
+Here in my home state of Georgia, we can see the following map plot of the percentage shift in vote share towards the Democratic presidential candidate per congressional district (McCrain, 2020).
+
+```{r Visualizing the Outcome of Interest - Georgia Map}
+
+district_map_data |> filter(state_name == "Georgia") |>
+  ggplot() +
+  geom_sf(aes(fill = `dem_diff_2020_2016`), color="black") + 
+  scale_fill_gradient2(low = "red", mid = "white", high = "steelblue4", midpoint = 0) +
+  theme_void() +
+  labs(
+    title = "Percentage Shift in Democratic Candidate\nVote Share per Congressional District in Georgia", 
+    fill = "% Dem Candidate\nVote Share Shift\n(2016-2020)", 
+    caption = "Source: Daily Kos"
+  ) + 
+  theme(plot.title = element_text(size = 16, hjust=0.2))
+```
+
+## Results
+
+With the data sourced and understood, we will now create visualizations and plots to help analyze the data and extract the key results, starting with investigating the relationship between a district's foreign born population share and Democratic presidential candidate vote share, both of which are precursors to our main variables of interest (the differences for them between 2016 and 2020).
+
+### Foreign Born Population Share vs. Dem Vote Share
+
+First, by joining the census data with the election data, we can explore our first visualization that showcases the relationship between foreign born population share vs. the voter share per district for Clinton in 2016. Note that the data points are also colored by whether the foreign population share increased between 2016 and 2020.
+
+```{r Visualizing Foreign Born Pop Share vs. Clinton Share}
+
 census_2016_2020 |>
-  left_join(elections) |>
+  left_join(elections, by = join_by(District)) |>
+  ggplot(aes(x = as.double(DP02_0092PE_2016), y = Clinton_2016)) +
+  geom_point(aes(color = DP02_0092PE_diff)) +
+  labs(
+    title = "Foreign Born Population Share vs.\nClinton Vote Share in Congressional Districts",
+    x = "2016 Foreign Born Population Share (%)",
+    y = "2016 Vote Share for Clinton (%)",
+    color = "% Foreign\nBorn\nPopulation\nIncrease \n(2016-20)",
+    caption = "Sources: American Community Survey, Daily Kos"
+  ) +
+  geom_smooth(method = "lm") +
+  scale_color_distiller(palette = "RdBu", aesthetics = "color") + 
+  theme(plot.title = element_text(size = 16, hjust=0.5))
+```
+
+Similarly, the following visualization showcases the relationship between foreign born population share vs. the voter share per district for Biden in 2020. Note that the data points are again colored by whether the foreign population share increased between 2016 and 2020.
+
+```{r Visualizing Foreign Born Pop Share vs. Biden Share}
+
+census_2016_2020 |>
+  left_join(elections, by = join_by(District)) |>
   ggplot(aes(x = as.double(DP02_0092PE_2020), y = Biden_2020)) +
   geom_point(aes(color = DP02_0092PE_diff)) +
   labs(
-    title = "Foreign Born Population vs. Biden Vote Share in Congressional Districts",
+    title = "Foreign Born Population Share vs.\nBiden Vote Share in Congressional Districts",
     x = "2020 Foreign Born Population Share (%)",
     y = "2020 Vote Share for Biden (%)",
     color = "% Foreign\nBorn\nPopulation\nIncrease \n(2016-20)",
     caption = "Sources: American Community Survey, Daily Kos"
   ) +
   geom_smooth(method = "lm") +
-  scale_color_distiller(palette = "RdBu", aesthetics = "color")
+  scale_color_distiller(palette = "RdBu", aesthetics = "color") + 
+  theme(plot.title = element_text(size = 16, hjust=0.5))
 ```
-We can start analyzing the effect of an increase in foreign born population share:
 
-```{r}
+Across both plots, we can find some interesting trends. First, in 2016, we see that districts with a higher foreign born population share (i.e., a greater percentage of their population was born outside the U.S.) tended to have higher voter share for Clinton, which fits in line with our hypothesis about greater immigration being linked with better Democratic outcomes. However, in 2020, we see that districts with a higher foreign born population share tended to have a lower voter share for Biden, a reversal of the results in 2016.
+
+Also, note that in 2016, the districts with the lowest foreign born population shares tended to have the greatest increases in that share between 2016 and 2020, which is reflected in the 2020 plot as well (the highest foreign born population shares tended to have the greatest increases over that range).
+
+### Analyzing the Main Relationship and Variables
+
+We can then analyze the effect of an increase in foreign born population share on our main outcome of interest, the Democratic candidate voter share shift between 2016 and 2020, with the following visualization.
+
+```{r Visualizing Foreign Born Pop Share vs. Democratic Share Vote Shift}
+
+census_2016_2020 |>
+  left_join(elections, by = join_by(District)) |>
+  ggplot(aes(x = DP02_0092PE_diff, y = dem_diff_2020_2016)) +
+  geom_point() + 
+  geom_smooth(method = "lm", color = "blue2") +
+  labs(
+    title = "Foreign Born Population Share Difference vs.\nDemocratic Vote Share Difference in Congressional Districts",
+    x = "% Foreign Born Population Share Difference (2016-2020)",
+    y = "% Democratic Vote Share Difference (2016-2020)",
+    caption = "Sources: American Community Survey, Daily Kos"
+  ) + 
+  theme(plot.title = element_text(size = 16, hjust=0.2))
+```
+
+We can see a clear trend that districts with a greater foreign born population share difference over the time period tended to have a greater Democratic vote share difference as well. In other words, districts that increased the percentage of their population born outside the U.S. tended to vote much more towards the Democratic candidate in 2020 compared to 2016. With this preliminary graph, we seem to have some support in favor of my original hypothesis.
+
+Next, we visualize the key Boolean variable at the heart of our analysis (essentially, our "treatment"), which is whether or not the foreign born population share increased, and its relationship with mean Democratic vote share difference.
+
+```{r Visualizing Foreign Born Pop Share Increase vs. Mean Democratic Share Vote Shift}
+
+census_2016_2020 |>
+  left_join(elections, by = join_by(District)) |>
+  mutate(for_increase = if_else(for_pop_perc_increase == 1, "Increased", "Did Not Increase")) |>
+  group_by(for_increase) |>
+  summarize(mean_dem_diff = mean(dem_diff_2020_2016)) |>
+  ggplot(aes(x = for_increase, y = mean_dem_diff, fill = for_increase)) +
+  geom_bar(stat="identity") + 
+  labs(
+    title = "Foreign Born Population Share Increase vs. Mean\nDemocratic Vote Share Difference in Congressional Districts",
+    x = "Foreign Born Population Share Increased (2016-2020)",
+    y = "Mean % Democratic Vote Share Difference (2016-2020)",
+    caption = "Sources: American Community Survey, Daily Kos"
+  ) + 
+  theme(plot.title = element_text(size = 16, hjust=0.2), legend.position="none") + 
+  scale_fill_manual(values = c("red3", "steelblue4"))
+```
+
+From this graph, we can see that, in districts where the foreign born population share increased, the Democratic vote share difference increased on average (by over 3 percentage points), while in districts where it did not increase, the vote share difference actually decreased on average (by almost 0.3 percentage points).
+
+### Conducting the Main Linear Regression
+
+From here, we can conduct the main linear regression between our two main variables: our treatment (if the foreign born population share increased or not) and our outcome (the shift in vote share for the Democratic presidential candidate).
+
+First, we start by finding the average treatment effect through a differences-in-differences estimator (Arel-Bundock, 2022):
+
+```{r Finding the Average Treatment Effect via DID}
+
 ate_for_pop_perc <- census_2016_2020 |>
-  left_join(elections) |>
-  mutate(Treatment = if_else(for_pop_perc_increase == 1, "Treated", "Control")) |>
+  left_join(elections, by = join_by(District)) |>
+  mutate(Treatment = if_else(for_pop_perc_increase == 1, "Increased", "Did Not Increase")) |>
   group_by(Treatment) |>
   summarize(dem_diff_mean = mean(dem_diff_2020_2016)) |>
   pivot_wider(names_from = Treatment,
               values_from = dem_diff_mean) |>
-  mutate(ATE = `Treated` - `Control`)
+  mutate(DID = `Increased` - `Did Not Increase`)
 
 ate_for_pop_perc |>
-  knitr::kable()
+  knitr::kable(digits = 2) |>
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
 ```
 
+Next, we can run the main regression on these variables with the following code:
+
+```{r Running the Main Regression}
+
+for_pop_election_data_simple <- census_2016_2020 |>
+  left_join(elections, by = join_by(District)) |>
+  mutate(Treatment = if_else(for_pop_perc_increase == 1, "Increased", "Did Not Increase")) |>
+  select("District", "for_pop_perc_increase", "dem_diff_2020_2016")
+  
+fit <- lm(dem_diff_2020_2016 ~ for_pop_perc_increase, data = for_pop_election_data_simple)
+```
+
+After doing so, we get the following regression table that describes our data (Arel-Bundock, 2022):
+
+```{r Regression Tables Output, echo = FALSE}
+var_labels <- c(
+  "(intercept)" = "(intercept)",
+  "for_pop_perc_increase" = "Increased Foreign Pop. Share"
+)
+
+modelsummary(
+  fit, 
+  coef_map = var_labels, 
+  gof_map = c("nobs", "r.squared", "adj.r.squared")
+) |>
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+  
+```
+
+As we can see, our variable `Increased Foreign Pop. Share` (representing the treatment/increase in foreign born population share in a district) has a positive coefficient of `3.84`, which matches the above DID result.
+
+Through both analyses, we can see that the DID estimator and the regression coefficient for the treatment is approximately `3.84`. We can interpret this value as the increase in Democratic candidate vote share over the time period for districts that increased in foreign born population share compared to districts that didn't. In other words, the districts that did have an increase in foreign born population share tended to have an increase of 3.84 percentage points in their vote share for the Democratic presidential candidates between 2016 and 2020 as compared to districts that didn't.
+
+Similarly, in both analyses, the intercept value and the `Did Not Increase` mean vote share shift is `-0.37`, which can be interpreted as how much the Democratic candidate vote share changed/went down by between the 2016 and 2020 elections in districts that did not experience an increase in foreign born population share.
+
+We can also see that the $R^2$ value of our model is 0.273, with an adjusted $R^2$ value of 0.271. As such, about 27% of the variation in the dependent variable (Democratic vote share shift) can be explained by the variation in the independent model (whether the foreign born population share increased). This is a relatively low value, but that would be expected with the given variable predicted being national election results that would have many different factors impacting it.
+
+### Analysis of Causality and Statistical Significance
+
+We can analyze the causality and statistical significance of these results to determine how much we should read into them and trust them.
+
+First, we can get the p-value for our coefficient/treatment effect calculated earlier.
+
+```{r Analyzing Statistical Significance}
+
+library(broom)
+tidy(fit) |>
+  knitr::kable(digits = 3) |>
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center")
+
+```
+
+We can see that the p-value is essentially `0.000`, which is less than an $\alpha$ of 0.05, meaning our results can be seen as statistically significant.
+
+For causality, we already saw earlier that the $R^2$ value of our independent variable is only around 0.27, which means that it has limited explanatory power with regards to our outcome variable. Thus, it is clear that there are other variables that can also explain and be linked with the outcome variable, including potential confounding variables. For example, a district's party affiliation makeup would obviously have an impact on the dependent variable, but also other trends such as urbanization, generational gaps, wealth, education, technology use, and more would impact electoral outcomes in districts. As such, while our plots and analysis showcase how foreign population share increase may potentially be associated with Democratic vote share shift, we cannot establish a clear causal relationship between the two variables, due to the influence of many other possible confounders.
+
+## Conclusion
+
+After completing this analysis, we can see that there is **limited** support for my original hypothesis. Specifically, through our analysis, we saw that there was a clear, statistically significant positive association between the increase in foreign population share in a district and a shift in vote share percentage for the Democratic presidential candidate, but it was not clear that this trend was definitively causal due to the likelihood of many other causal factors. Some limitations and threats to our analysis include the limited focus of the data on only the last two election cycles as well as the possible confounders, such as affiliation, urbanization, generational gaps, wealth, education, etc. With more time and/or money, I would improve my analysis by focusing on more than just two election cycles to hone in on this relationship as well as include the other confounding variables in my regression analysis.
+
+Overall, I worked on and completed a really interesting analysis on this topic that I truly enjoyed, and I had the opportunity to explore potential factors behind important electoral and demographic trends in the United States.
+
+## References
+
+-   Arel-Bundock, Vincent. "modelsummary: Data and Model Summaries in R". *Journal of Statistical Software* *103*. 1(2022): 1--23.
+-   Daily Kos Staff. "The Ultimate Daily Kos Elections Guide to All of Our Data Sets." *Daily Kos Data*, Daily Kos, 21 Sept. 2022, <https://www.dailykos.com/stories/2022/9/21/1742660/-The-ultimate-Daily-Kos-Elections-guide-to-all-of-our-data-sets>.
+-   McCrain, Josh. \"Descriptive Statistics and Visualizations.\" *Congressional Data in R*, joshmccrain.com, 2020, <https://congressdata.joshuamccrain.com/visualization.html>.
+-   U.S. Census Bureau. "2016-2021 American Community Survey 5-Year Estimates Data Profiles." *U.S. Census Bureau*, United States Census Bureau, 2022, <https://data.census.gov/table/ACSDP1Y2022.DP02?q=Native+and+Foreign+Born&g=010XX00US$5000000>.
