@@ -171,7 +171,8 @@ elections |>
   labs(
     title = "Distribution of Democratic Candidate Vote Share Percentage Shifts across Congressional Districts", 
     x = "% Democratic Candidate Vote Share Shift (2016-2020)", 
-    y = "Frequency"
+    y = "Frequency", 
+    caption = "Source: Daily Kos"
   ) + 
   theme(plot.title = element_text(size = "10"))
 ```
@@ -408,5 +409,5 @@ Overall, I worked on and completed a really interesting analysis on this topic t
 
 -   Arel-Bundock, Vincent. "modelsummary: Data and Model Summaries in R". *Journal of Statistical Software* *103*. 1(2022): 1--23.
 -   Daily Kos Staff. "The Ultimate Daily Kos Elections Guide to All of Our Data Sets." *Daily Kos Data*, Daily Kos, 21 Sept. 2022, <https://www.dailykos.com/stories/2022/9/21/1742660/-The-ultimate-Daily-Kos-Elections-guide-to-all-of-our-data-sets>.
--   McCrain, Josh. \"Descriptive Statistics and Visualizations.\" *Congressional Data in R*, joshmccrain.com, 2020, <https://congressdata.joshuamccrain.com/visualization.html>.
+-   McCrain, Josh. "Descriptive Statistics and Visualizations." *Congressional Data in R*, joshmccrain.com, 2020, <https://congressdata.joshuamccrain.com/visualization.html>.
 -   U.S. Census Bureau. "2016-2021 American Community Survey 5-Year Estimates Data Profiles." *U.S. Census Bureau*, United States Census Bureau, 2022, <https://data.census.gov/table/ACSDP1Y2022.DP02?q=Native+and+Foreign+Born&g=010XX00US$5000000>.
